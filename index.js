@@ -15,8 +15,8 @@ const pool = new Pool({
 
 // =================== Config MQTT ===================
 const MQTT_BROKER = "mqtt://test.mosquitto.org:1883";
-const SUB_TOPIC = "grupo1/teste";
-const PUB_TOPIC = "grupo1/cmd";
+const SUB_TOPIC = "grupo1/teste"; // Render recebe do ESP32
+const PUB_TOPIC = "grupo1/cmd";   // Render envia comandos p/ ESP32
 
 const client = mqtt.connect(MQTT_BROKER);
 
@@ -24,7 +24,7 @@ const client = mqtt.connect(MQTT_BROKER);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir arquivos estáticos (HTML/CSS/JS)
+// Servir HTML estático
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
@@ -50,14 +50,9 @@ client.on("message", async (topic, message) => {
   } catch (err) {
     console.error("❌ Erro ao salvar no banco:", err);
   }
-
-  // Resposta para ESP32
-  client.publish(PUB_TOPIC, "✅ Render recebeu e gravou!");
 });
 
 // ----------------- Rotas API -----------------
-
-// Buscar mensagens (com limite configurável)
 app.get("/api/mensagens", async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   try {
@@ -71,11 +66,12 @@ app.get("/api/mensagens", async (req, res) => {
   }
 });
 
-// Enviar mensagem manual pelo painel
+// Enviar comando para ESP32
 app.post("/api/enviar", (req, res) => {
   const msg = req.body.mensagem;
   if (!msg) return res.status(400).send("Mensagem vazia");
-  client.publish(SUB_TOPIC, msg);
+  console.log("📤 Enviando comando para ESP32:", msg);
+  client.publish(PUB_TOPIC, msg);
   res.json({ enviado: msg });
 });
 
