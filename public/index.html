@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel MQTT</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #2c3e50; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 8px; text-align: left; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .form-section { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+    label { display: block; margin: 8px 0 4px; }
+    input, select, button { padding: 6px; }
+  </style>
+</head>
+<body>
+  <h1>📡 Painel MQTT + PostgreSQL</h1>
+
+  <div>
+    <label for="limit">Quantidade de mensagens:</label>
+    <select id="limit">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+    </select>
+    <button onclick="carregarMensagens()">🔄 Atualizar</button>
+  </div>
+
+  <table id="tabela">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Tópico</th>
+        <th>Payload</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="form-section">
+    <h3>Enviar mensagem MQTT</h3>
+    <form id="formEnviar">
+      <label for="mensagem">Mensagem:</label>
+      <input type="text" id="mensagem" name="mensagem" required>
+      <button type="submit">📤 Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    async function carregarMensagens() {
+      const limit = document.getElementById("limit").value;
+      const resp = await fetch(`/api/mensagens?limit=${limit}`);
+      const dados = await resp.json();
+
+      const tbody = document.querySelector("#tabela tbody");
+      tbody.innerHTML = "";
+      dados.forEach(m => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${m.id}</td>
+          <td>${m.topico}</td>
+          <td>${m.payload}</td>
+          <td>${new Date(m.criado_em).toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById("formEnviar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("mensagem").value;
+      await fetch("/api/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: msg })
+      });
+      alert("Mensagem enviada!");
+      document.getElementById("mensagem").value = "";
+    });
+
+    // carregar ao abrir
+    carregarMensagens();
+  </script>
+</body>
+</html>
