@@ -1,0 +1,11 @@
+{
+  "name": "mqtt-render",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mqtt": "^5.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
